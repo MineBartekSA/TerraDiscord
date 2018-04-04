@@ -125,7 +125,10 @@ namespace TerraDiscord
             if (args.Author.IsBot)
                 return;
             if (CheckIfHasRole(args.Author, args.Guild, Config.current.PMRole))
+            {
+                await args.Message.DeleteAsync(args.Author.Username + " is muted!");
                 return;
+            }
 
             if (args.Message.Content.StartsWith(Config.current.DCSpecifier + "mute "))
             {
