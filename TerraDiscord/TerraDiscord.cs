@@ -109,6 +109,8 @@ namespace TerraDiscord
                 return;
             if (args.Author.IsBot)
                 return;
+            if (CheckIfHasRole(args.Author, args.Guild, Config.current.PMRole))
+                return;
 
             if (args.Message.Content.StartsWith(Config.current.DCSpecifier + "mute "))
             {
@@ -123,7 +125,7 @@ namespace TerraDiscord
                 if (paras.Length < 2)
                 {
                     await DC.SendMessageAsync(args.Channel, "Invalid paramiters!");
-                    await DC.SendMessageAsync(args.Channel, "Usage: " + Config.current.DCSpecifier + "mute < terraria:discord> <username> [<username> ...]");
+                    await DC.SendMessageAsync(args.Channel, "Usage: " + Config.current.DCSpecifier + "mute <terraria:discord> <username> [<username> ...]");
                     await DC.SendMessageAsync(args.Channel, "Don't use @username");
                     return;
                 }

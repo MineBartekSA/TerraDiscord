@@ -60,6 +60,11 @@ namespace TerraDiscord
                     current.Token = "TAdmin";
                     isOverrided = true;
                 }
+                if(current.PMRole == null || current.PMRole == string.Empty)
+                {
+                    current.Token = "PermMute";
+                    isOverrided = true;
+                }
                 if (current.TCC == null)
                 {
                     current.ChatColor = Color.LawnGreen;
@@ -99,6 +104,7 @@ namespace TerraDiscord
                     Token = "Please fill me senpai!!~",
                     Channel = "Here tooooo!!!~",
                     ARole = "TAdmin",
+                    PMRole = "PermMute",
                     ChatColor = Color.LawnGreen,
                     TCC = new TerrariaChatColor { A = current.ChatColor.A, R = current.ChatColor.R, G = current.ChatColor.G, B = current.ChatColor.A },
                     DFormat = "{nick}: {message}", //{nick} - Player username, {prefix} - Group prefix, {suffix} - Group suffix, {group} - Group name, {message} - Message
@@ -123,6 +129,8 @@ namespace TerraDiscord
         public string Channel { get; set; }
         [JsonProperty("AdminRole")]
         public string ARole { get; set; }
+        [JsonProperty("PermMuteRole")]
+        public string PMRole { get; set; }
         [JsonProperty("TerrariaChatColor")]
         public TerrariaChatColor TCC { get; set; }
         [JsonIgnore]
