@@ -411,6 +411,8 @@ namespace TerraDiscord
 
         async Task<DiscordMessage> Send(DiscordChannel chan, string message)
         {
+            if (message == Config.current.DFormat)
+                return null;
             try
             {
                 return await DC.SendMessageAsync(chan, message);
