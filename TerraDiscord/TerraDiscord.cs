@@ -64,7 +64,22 @@ namespace TerraDiscord
                 }
             }
 
-            StartBot().GetAwaiter().GetResult();
+            try
+            {
+                StartBot().GetAwaiter().GetResult();
+            }
+            catch(DSharpPlus.Exceptions.UnauthorizedException ue)
+            {
+                TShock.Log.ConsoleError("[TerraDiscord] Um..... You Token seams invalid!");
+                TShock.Log.Error("Error trying to connect. Error: " + ue.Message);
+                return;
+            }
+            catch(Exception exe)
+            {
+                TShock.Log.ConsoleError("[TerraDiscord] I can't connect! THERE IS NO PATH");
+                TShock.Log.Error("Error trying to connect. EName: " + exe.ToString() + " Error: " + exe.Message);
+                return;
+            }
 
             Commands.ChatCommands.Add(new Command("terradiscord.admin", TDCom, "td", "terradiscord"));
             ServerApi.Hooks.ServerChat.Register(this, OnChat);
@@ -96,7 +111,7 @@ namespace TerraDiscord
 
         async Task DCError(ClientErrorEventArgs args)
         {
-            TShock.Log.ConsoleError("[TerraDiscord] Something bork! PLS CONTAC ATHOR");
+            TShock.Log.ConsoleError("[TerraDiscord] Something brok! PLS CONTAC ATHOR");
             TShock.Log.Error("An Error occured! EventName: " + args.EventName + " Error: " + args.Exception.Message);
             await Task.Delay(0);
         }
@@ -335,7 +350,11 @@ namespace TerraDiscord
             {
                 await Task.Delay(0);
                 string formattedMessage = Config.current.TFormat;
-                formattedMessage = formattedMessage.Replace("{nick}", args.Author.Username).Replace("{role}", ((DiscordMember)args.Author).Roles.First().Name).Replace("{message}", args.Message.Content);
+                if (((DiscordMember)args.Author).Nickname == "" || ((DiscordMember)args.Author).Nickname == null)
+                    formattedMessage = formattedMessage.Replace("{nick}", args.Author.Username);
+                else
+                    formattedMessage = formattedMessage.Replace("{nick}", ((DiscordMember)args.Author).Nickname);
+                formattedMessage = formattedMessage.Replace("{role}", ((DiscordMember)args.Author).Roles.First().Name).Replace("{message}", args.Message.Content).Replace("{user}", args.Author.Username);
                 TShock.Utils.Broadcast(formattedMessage, Config.current.ChatColor);
             }
         }

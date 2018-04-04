@@ -33,7 +33,7 @@ namespace TerraDiscord
                         TCC = new TerrariaChatColor { A = current.ChatColor.A, R = current.ChatColor.R, G = current.ChatColor.G, B = current.ChatColor.A },
                         DFormat = "{nick}: {message}", //{nick} - Player username, {prefix} - Group prefix, {suffix} - Group suffix, {group} - Group name, {message} - Message
                         DCSpecifier = "!",
-                        TFormat = "[Discord]{nick}: {message}", //{nick} - Username, {role} - First role, {message} - Message
+                        TFormat = "[Discord]{nick}: {message}", //{nick} - Nickname or username, {user} - Username {role} - First role, {message} - Message
                         TCID = false,
                         TCIDFilter = true,
                         TCIDBlackList = new List<string> { "user", "group", "stop", "restart" },
@@ -52,17 +52,17 @@ namespace TerraDiscord
                 }
                 if (current.Channel == null || current.Channel == string.Empty)
                 {
-                    current.Token = "Here tooooo!!!~";
+                    current.Channel = "Here tooooo!!!~";
                     isOverrided = true;
                 }
                 if (current.ARole == null || current.ARole == string.Empty)
                 {
-                    current.Token = "TAdmin";
+                    current.ARole = "TAdmin";
                     isOverrided = true;
                 }
                 if(current.PMRole == null || current.PMRole == string.Empty)
                 {
-                    current.Token = "PermMute";
+                    current.PMRole = "PermMute";
                     isOverrided = true;
                 }
                 if (current.TCC == null)
@@ -73,7 +73,7 @@ namespace TerraDiscord
                 }
                 if (current.DFormat == null || current.DFormat == string.Empty)
                 {
-                    current.Token = "{nick}: {message}";
+                    current.DFormat = "{nick}: {message}";
                     isOverrided = true;
                 }
                 if (current.DCSpecifier == null || current.DCSpecifier == string.Empty)
@@ -83,12 +83,12 @@ namespace TerraDiscord
                 }
                 if (current.TFormat == null || current.TFormat == string.Empty)
                 {
-                    current.Token = "[Discord]{nick}: {message}";
+                    current.TFormat = "[Discord]{nick}: {message}";
                     isOverrided = true;
                 }
                 if (current.TCIDRole == null || current.TCIDRole == string.Empty)
                 {
-                    current.Token = "TAdmin";
+                    current.TCIDRole = "TAdmin";
                     isOverrided = true;
                 }
 
