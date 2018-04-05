@@ -29,11 +29,13 @@ namespace TerraDiscord
                         Token = "Please fill me senpai!!~",
                         Channel = "Here tooooo!!!~",
                         ARole = "TAdmin",
+                        PMRole = "PermMute",
+                        isWhitelist = false,
                         ChatColor = Color.LawnGreen,
-                        TCC = new TerrariaChatColor { A = current.ChatColor.A, R = current.ChatColor.R, G = current.ChatColor.G, B = current.ChatColor.A },
+                        TCC = new TerrariaChatColor { A = Color.LawnGreen.A, R = Color.LawnGreen.R, G = Color.LawnGreen.G, B = Color.LawnGreen.B },
                         DFormat = "{nick}: {message}", //{nick} - Player username, {prefix} - Group prefix, {suffix} - Group suffix, {group} - Group name, {message} - Message
                         DCSpecifier = "!",
-                        TFormat = "[Discord]{nick}: {message}", //{nick} - Nickname or username, {user} - Username {role} - First role, {message} - Message
+                        TFormat = "[Discord]{nick}: {message}", //{nick} - Username, {role} - First role, {message} - Message
                         TCID = false,
                         TCIDFilter = true,
                         TCIDBlackList = new List<string> { "user", "group", "stop", "restart" },
@@ -105,8 +107,9 @@ namespace TerraDiscord
                     Channel = "Here tooooo!!!~",
                     ARole = "TAdmin",
                     PMRole = "PermMute",
+                    isWhitelist = false,
                     ChatColor = Color.LawnGreen,
-                    TCC = new TerrariaChatColor { A = current.ChatColor.A, R = current.ChatColor.R, G = current.ChatColor.G, B = current.ChatColor.A },
+                    TCC = new TerrariaChatColor { A = Color.LawnGreen.A, R = Color.LawnGreen.R, G = Color.LawnGreen.G, B = Color.LawnGreen.B },
                     DFormat = "{nick}: {message}", //{nick} - Player username, {prefix} - Group prefix, {suffix} - Group suffix, {group} - Group name, {message} - Message
                     DCSpecifier = "!",
                     TFormat = "[Discord]{nick}: {message}", //{nick} - Username, {role} - First role, {message} - Message
@@ -129,8 +132,10 @@ namespace TerraDiscord
         public string Channel { get; set; }
         [JsonProperty("AdminRole")]
         public string ARole { get; set; }
-        [JsonProperty("PermMuteRole")]
+        [JsonProperty("White/BlacklistRole")]
         public string PMRole { get; set; }
+        [JsonProperty("Whitelist")]
+        public bool isWhitelist { get; set; }
         [JsonProperty("TerrariaChatColor")]
         public TerrariaChatColor TCC { get; set; }
         [JsonIgnore]

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using TerrariaApi.Server;
 using TShockAPI;
+using TShockAPI.DB;
 using Terraria;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
@@ -18,6 +19,8 @@ namespace TerraDiscord
         public DiscordChannel chan;
         private List<TSPlayer> TMute = new List<TSPlayer>();
         private List<DiscordUser> DMute = new List<DiscordUser>();
+        private List<string> SQLTDW = new List<string>();
+        private Dictionary<string, string> SQLTDM = new Dictionary<string, string>();
 
         public override string Name => "TerraDiscord";
         public override string Description => "An Discord bot plugin";
@@ -66,6 +69,7 @@ namespace TerraDiscord
 
             try
             {
+                DBInit();
                 StartBot().GetAwaiter().GetResult();
             }
             catch(DSharpPlus.Exceptions.UnauthorizedException ue)
@@ -124,7 +128,12 @@ namespace TerraDiscord
                 return;
             if (args.Author.IsBot)
                 return;
-            if (CheckIfHasRole(args.Author, args.Guild, Config.current.PMRole))
+            if(Config.current.isWhitelist && !CheckIfHasRole(args.Author, args.Guild, Config.current.PMRole))
+            {
+                await args.Message.DeleteAsync(args.Author.Username + " is muted!");
+                return;
+            }
+            else if (!Config.current.isWhitelist && CheckIfHasRole(args.Author, args.Guild, Config.current.PMRole))
             {
                 await args.Message.DeleteAsync(args.Author.Username + " is muted!");
                 return;
@@ -388,7 +397,7 @@ namespace TerraDiscord
             try
             {
                 if (formattedMessage.Contains("{nick}"))
-                    formattedMessage = formattedMessage.Replace("{nick}", who.User.Name);
+                    formattedMessage = formattedMessage.Replace("{nick}", who.Name);
                 if (formattedMessage.Contains("{message}"))
                     formattedMessage = formattedMessage.Replace("{message}", message);
 
@@ -631,11 +640,144 @@ namespace TerraDiscord
                     foreach (DiscordUser d in DMute)
                         args.Player.SendInfoMessage("- " + d.Username);
                 }
+                else if(args.Parameters[0].ToLower() == "whitelist")
+                {
+                    if(args.Parameters.Count == 1)
+                    {
+                        args.Player.SendInfoMessage("Usage: td whitelist <username> [<username> ...] - Add or Remove to the whitelist");
+                        return;
+                    }
+                    
+                    if(args.Parameters.Count == 2)
+                    {
+                        List<TSPlayer> p = TShock.Utils.FindPlayer(args.Parameters[1]);
+                        if(p.Count == 0)
+                        {
+                            args.Player.SendErrorMessage("No users found!");
+                            return;
+                        }
+                        else if(p.Count != 1)
+                        {
+                            args.Player.SendErrorMessage("Too many users found!");
+                            return;
+                        }
+
+                        if(SQLTDW.Contains(p[0].User.Name))
+                        {
+                            RemoveFromDB(p[0].User.Name, "TDWhitelist");
+                            SQLTDW.Remove(p[0].User.Name);
+                            args.Player.SendInfoMessage("Removed form whitelist " + p[0].User.Name);
+                        }
+                        else
+                        {
+                            AddToDB(p[0].User.Name);
+                            SQLTDW.Add(p[0].User.Name);
+                            args.Player.SendInfoMessage("Added to whitelist " + p[0].User.Name);
+                        }
+                    }
+                    else
+                    {
+                        List<TSPlayer> toaor = new List<TSPlayer>();
+                        for(int i = 1; i < args.Parameters.Count; i++)
+                        {
+                            List<TSPlayer> p = TShock.Utils.FindPlayer(args.Parameters[i]);
+                            if (p.Count == 0)
+                            {
+                                args.Player.SendErrorMessage("No users found for " + args.Parameters[i] + "!");
+                                return;
+                            }
+                            else if (p.Count != 1)
+                            {
+                                args.Player.SendErrorMessage("Too many users found for " + args.Parameters[i] + "!");
+                                return;
+                            }
+                            toaor.Add(p[0]);
+                        }
+
+                        string add = "Added: ", rm = "Removed: ";
+                        foreach(TSPlayer pl in toaor)
+                        {
+                            if (SQLTDW.Contains(pl.User.Name))
+                            {
+                                RemoveFromDB(pl.User.Name, "TDWhitelist");
+                                SQLTDW.Remove(pl.User.Name);
+                                rm += pl.User.Name + ", ";
+                            }
+                            else
+                            {
+                                AddToDB(pl.User.Name);
+                                SQLTDW.Add(pl.User.Name);
+                                add += pl.User.Name + ", ";
+                            }
+                        }
+                        if (add.Length > 7)
+                            args.Player.SendInfoMessage(add.Remove(add.Length - 2));
+                        if (rm.Length > 9)
+                            args.Player.SendInfoMessage(rm.Remove(rm.Length - 2));
+                    }
+                }
                 else
                 {
                     args.Player.SendErrorMessage("Invalid command");
                 }
             }
+        }
+
+        void DBInit()
+        {
+            bool TDM = false, TDW = false;
+            try
+            {
+                TShock.DB.Query("CREATE TABLE TDMuted(name TEXT, type TEXT)");
+            }
+            catch(Exception exe)
+            {
+                if (exe.Message != "SQLite error table TDMuted already exists")
+                    throw new Exception("SQL ERROR: " + exe.ToString());
+                TDM = true;
+            }
+
+            try
+            {
+                TShock.DB.Query("CREATE TABLE TDWhitelist(name TEXT)");
+            }
+            catch(Exception exe)
+            {
+                if (exe.Message != "SQLite error table TDWhitelist already exists")
+                    throw new Exception("SQL ERROR: " + exe.ToString());
+                TDW = true;
+            }
+
+            if(TDM)
+            {
+                QueryResult QR = TShock.DB.QueryReader("SELECT * FROM TDMuted");
+                while(QR.Read())
+                    SQLTDM.Add(QR.Get<string>("name"), QR.Get<string>("type"));
+            }
+            if(TDW)
+            {
+                QueryResult QR = TShock.DB.QueryReader("SELECT * FROM TDWhitelist");
+                while (QR.Read())
+                    SQLTDW.Add(QR.Get<string>("name"));
+            }
+        }
+
+        void AddToDB(string name, string type)
+        {
+            if(TShock.DB.Query("INSERT INTO TDMuted(name, type) VALUES (" + name + ", " + type + ")") != 0)
+                TShock.Log.Error("SQL Error while inserting to TDMuted"); 
+        }
+
+        void AddToDB(string name)
+        {
+            if (TShock.DB.Query("INSERT INTO TDWhitelist(name) VALUES (" + name + ")") != 0)
+                TShock.Log.Error("SQL Error while inserting to TDWhitelist");
+        }
+
+        void RemoveFromDB(string name, string DB)
+        {
+            if(TShock.DB.Query("DELETE FROM " + DB + "WHERE name='" + name + "'") != 0)
+                TShock.Log.Error("SQL Error while inserting to " + DB);
         }
     }
 }
