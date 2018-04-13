@@ -20,7 +20,8 @@ namespace TerraDiscord
         private List<TSPlayer> TMute = new List<TSPlayer>();
         private List<DiscordUser> DMute = new List<DiscordUser>();
         private List<string> SQLTDW = new List<string>();
-        private Dictionary<string, string> SQLTDM = new Dictionary<string, string>();
+        private List<string> SQLTDMD = new List<string>();
+        private List<string> SQLTDMT = new List<string>();
 
         public override string Name => "TerraDiscord";
         public override string Description => "An Discord bot plugin";
@@ -128,12 +129,13 @@ namespace TerraDiscord
                 return;
             if (args.Author.IsBot)
                 return;
-            if(Config.current.isWhitelist && !CheckIfHasRole(args.Author, args.Guild, Config.current.PMRole))
+
+            if((Config.current.Whitelist == Whitelist.Discord || Config.current.Whitelist == Whitelist.Both) && !CheckIfHasRole(args.Author, args.Guild, Config.current.PMRole))
             {
                 await args.Message.DeleteAsync(args.Author.Username + " is muted!");
                 return;
             }
-            else if (!Config.current.isWhitelist && CheckIfHasRole(args.Author, args.Guild, Config.current.PMRole))
+            else if ((Config.current.Whitelist == Whitelist.None || Config.current.Whitelist == Whitelist.Terraria) && CheckIfHasRole(args.Author, args.Guild, Config.current.PMRole))
             {
                 await args.Message.DeleteAsync(args.Author.Username + " is muted!");
                 return;
@@ -173,15 +175,17 @@ namespace TerraDiscord
                             return;
                         }
 
-                        if (TMute.Contains(p[0]))
+                        if (TMute.Contains(p[0]) || SQLTDMT.Contains(p[0].User.Name))
                         {
                             TMute.Remove(p[0]);
+                            RemoveFromDB(p[0].User.Name, "terraria");
                             p[0].SendInfoMessage("You have been unmuted form Discord chat!");
                             await DC.SendMessageAsync(args.Channel, "Unmuted " + p[0].User.Name);
                         }
                         else
                         {
                             TMute.Add(p[0]);
+                            AddToDB(p[0].User.Name, "terraria");
                             p[0].SendInfoMessage("You have been muted on Discord chat!");
                             await DC.SendMessageAsync(args.Channel, "Muted " + p[0].User.Name);
                         }
@@ -199,14 +203,16 @@ namespace TerraDiscord
                             return;
                         }
 
-                        if (DMute.Contains(user))
+                        if (DMute.Contains(user) || SQLTDMD.Contains(user.Username))
                         {
                             DMute.Remove(user);
+                            RemoveFromDB(user.Username, "discord");
                             await DC.SendMessageAsync(args.Channel, "Unmuted " + user.Username);
                         }
                         else
                         {
                             DMute.Add(user);
+                            AddToDB(user.Username, "discord");
                             await DC.SendMessageAsync(args.Channel, "Muted " + user.Username);
                         }
                     }
@@ -236,15 +242,17 @@ namespace TerraDiscord
                         string dMessage = "Unmuted: ";
                         foreach (TSPlayer play in playerToMute)
                         {
-                            if (TMute.Contains(play))
+                            if (TMute.Contains(play) || SQLTDMT.Contains(play.User.Name))
                             {
                                 TMute.Remove(play);
+                                RemoveFromDB(play.User.Name, "terraria");
                                 play.SendInfoMessage("You have been unmuted form Discord chat!");
                                 dMessage += play.User.Name + ", ";
                             }
                             else
                             {
                                 TMute.Add(play);
+                                AddToDB(play.User.Name, "terraria");
                                 play.SendInfoMessage("You have been muted on Discord chat!");
                                 mMessage += play.User.Name + ", ";
                             }
@@ -277,14 +285,16 @@ namespace TerraDiscord
                         string dMessage = "Unmuted: ";
                         foreach (DiscordUser user in userToMute)
                         {
-                            if (DMute.Contains(user))
+                            if (DMute.Contains(user) || SQLTDMD.Contains(user.Username))
                             {
                                 DMute.Remove(user);
+                                RemoveFromDB(user.Username, "discord");
                                 dMessage += user.Username + ", ";
                             }
                             else
                             {
                                 DMute.Add(user);
+                                AddToDB(user.Username, "discord");
                                 mMessage += user.Username + ", ";
                             }
                         }
@@ -315,6 +325,11 @@ namespace TerraDiscord
                 return;
             }
             else if (DMute.Contains(args.Author))
+            {
+                await args.Message.DeleteAsync(args.Author.Username + " is muted!");
+                return;
+            }
+            else if(SQLTDMD.Contains(args.Author.Username))
             {
                 await args.Message.DeleteAsync(args.Author.Username + " is muted!");
                 return;
@@ -382,9 +397,13 @@ namespace TerraDiscord
         {
             if (args.Text.StartsWith(TShock.Config.CommandSpecifier))
                 return;
+            if ((Config.current.Whitelist == Whitelist.Terraria || Config.current.Whitelist == Whitelist.Both) && !SQLTDW.Contains(TShock.Players[args.Who].User.Name))
+                return;
             if (TShock.Players[args.Who].HasPermission("terradiscord.permmute") && !TShock.Players[args.Who].HasPermission("*"))
                 return;
             if (TMute.Contains(TShock.Players[args.Who]))
+                return;
+            if (SQLTDMT.Contains(TShock.Players[args.Who].User.Name))
                 return;
             TShock.Log.Info("Trying to send message");
             await FormatAndSend(chan, args.Text, TShock.Players[args.Who]);
@@ -540,15 +559,17 @@ namespace TerraDiscord
                                 string dMessage = "Unmuted: ";
                                 foreach (TSPlayer play in playerToMute)
                                 {
-                                    if (TMute.Contains(play))
+                                    if (TMute.Contains(play) || SQLTDMT.Contains(play.User.Name))
                                     {
                                         TMute.Remove(play);
+                                        RemoveFromDB(play.User.Name, "terraria");
                                         play.SendInfoMessage("You have been unmuted form Discord chat!");
                                         dMessage += play.User.Name + ", ";
                                     }
                                     else
                                     {
                                         TMute.Add(play);
+                                        AddToDB(play.User.Name, "terraria");
                                         play.SendInfoMessage("You have been muted on Discord chat!");
                                         mMessage += play.User.Name + ", ";
                                     }
@@ -560,15 +581,17 @@ namespace TerraDiscord
                             }
                             else
                             {
-                                if (TMute.Contains(playerToMute[0]))
+                                if (TMute.Contains(playerToMute[0]) || SQLTDMT.Contains(playerToMute[0].User.Name))
                                 {
                                     TMute.Remove(playerToMute[0]);
+                                    RemoveFromDB(playerToMute[0].User.Name, "terraria");
                                     playerToMute[0].SendInfoMessage("You have been unmuted form Discord chat!");
                                     args.Player.SendInfoMessage("Unmuted " + playerToMute[0].User.Name);
                                 }
                                 else
                                 {
                                     TMute.Add(playerToMute[0]);
+                                    AddToDB(playerToMute[0].User.Name, "terraria");
                                     playerToMute[0].SendInfoMessage("You have been muted on Discord chat!");
                                     args.Player.SendInfoMessage("Muted " + playerToMute[0].User.Name);
                                 }
@@ -580,7 +603,15 @@ namespace TerraDiscord
                             for (int i = 2; i < args.Parameters.Count; i++)
                             {
                                 bool found = false;
-                                DC.Guilds.ForEach(a => { userToMute.Add(a.Value.Members.Where(b => b.Username == args.Parameters[i]).First()); found = true; });
+                                try
+                                {
+                                    DC.Guilds.ForEach(a => { userToMute.Add(a.Value.Members.Where(b => b.Username == args.Parameters[i]).First()); found = true; });
+                                }
+                                catch(InvalidOperationException exe)
+                                {
+                                    TShock.Log.Error("Error while searching for Discord User. " + exe.HResult);
+                                    found = false;
+                                }
                                 if(!found)
                                 {
                                     args.Player.SendErrorMessage("Couldn't find discord user '" + args.Parameters[i] + "'!");
@@ -594,15 +625,17 @@ namespace TerraDiscord
                                 string dMessage = "Unmuted: ";
                                 foreach (DiscordUser user in userToMute)
                                 {
-                                    if (DMute.Contains(user))
+                                    if (DMute.Contains(user) || SQLTDMD.Contains(user.Username))
                                     {
                                         DMute.Remove(user);
+                                        RemoveFromDB(user.Username, "discord");
                                         Send(chan, user.Username + " has been unmuted by " + args.Player.User.Name + "!").GetAwaiter();
                                         dMessage += user.Username + ", ";
                                     }
                                     else
                                     {
                                         DMute.Add(user);
+                                        AddToDB(user.Username, "discord");
                                         Send(chan, user.Username + " has been muted by " + args.Player.User.Name + "!").GetAwaiter();
                                         mMessage += user.Username + ", ";
                                     }
@@ -614,15 +647,17 @@ namespace TerraDiscord
                             }
                             else
                             {
-                                if (DMute.Contains(userToMute[0]))
+                                if (DMute.Contains(userToMute[0]) || SQLTDMD.Contains(userToMute[0].Username))
                                 {
                                     DMute.Remove(userToMute[0]);
+                                    RemoveFromDB(userToMute[0].Username, "discord");
                                     Send(chan, userToMute[0].Username + " has been unmuted by " + args.Player.User.Name + "!").GetAwaiter();
                                     args.Player.SendInfoMessage("Unmuted " + userToMute[0].Username);
                                 }
                                 else
                                 {
                                     DMute.Add(userToMute[0]);
+                                    AddToDB(userToMute[0].Username, "discord");
                                     Send(chan, userToMute[0].Username + " has been muted by " + args.Player.User.Name + "!").GetAwaiter();
                                     args.Player.SendInfoMessage("Muted " + userToMute[0].Username);
                                 }
@@ -664,7 +699,7 @@ namespace TerraDiscord
 
                         if(SQLTDW.Contains(p[0].User.Name))
                         {
-                            RemoveFromDB(p[0].User.Name, "TDWhitelist");
+                            RemoveFromDB(p[0].User.Name);
                             SQLTDW.Remove(p[0].User.Name);
                             args.Player.SendInfoMessage("Removed form whitelist " + p[0].User.Name);
                         }
@@ -699,7 +734,7 @@ namespace TerraDiscord
                         {
                             if (SQLTDW.Contains(pl.User.Name))
                             {
-                                RemoveFromDB(pl.User.Name, "TDWhitelist");
+                                RemoveFromDB(pl.User.Name);
                                 SQLTDW.Remove(pl.User.Name);
                                 rm += pl.User.Name + ", ";
                             }
@@ -732,8 +767,8 @@ namespace TerraDiscord
             }
             catch(Exception exe)
             {
-                if (exe.Message != "SQLite error table TDMuted already exists")
-                    throw new Exception("SQL ERROR: " + exe.ToString());
+                if(exe.HResult != -2147467259)
+                    throw new Exception("SQL ERROR: " + exe.HResult);
                 TDM = true;
             }
 
@@ -743,7 +778,7 @@ namespace TerraDiscord
             }
             catch(Exception exe)
             {
-                if (exe.Message != "SQLite error table TDWhitelist already exists")
+                if(exe.HResult != -2147467259)
                     throw new Exception("SQL ERROR: " + exe.ToString());
                 TDW = true;
             }
@@ -752,7 +787,12 @@ namespace TerraDiscord
             {
                 QueryResult QR = TShock.DB.QueryReader("SELECT * FROM TDMuted");
                 while(QR.Read())
-                    SQLTDM.Add(QR.Get<string>("name"), QR.Get<string>("type"));
+                {
+                    if (QR.Get<string>("type") == "discord")
+                        SQLTDMD.Add(QR.Get<string>("name"));
+                    else if (QR.Get<string>("type") == "terraria")
+                        SQLTDMT.Add(QR.Get<string>("name"));
+                }
             }
             if(TDW)
             {
@@ -764,20 +804,44 @@ namespace TerraDiscord
 
         void AddToDB(string name, string type)
         {
-            if(TShock.DB.Query("INSERT INTO TDMuted(name, type) VALUES (" + name + ", " + type + ")") != 0)
-                TShock.Log.Error("SQL Error while inserting to TDMuted"); 
+            if (TShock.DB.Query("INSERT INTO TDMuted(name, type) VALUES ('" + name + "', '" + type + "')") != 1)
+                TShock.Log.Error("SQL Error while inserting to TDMuted");
+            else
+            {
+                if (type == "discord")
+                    SQLTDMD.Add(name);
+                else if (type == "terraria")
+                    SQLTDMT.Add(name);
+            }
         }
 
         void AddToDB(string name)
         {
-            if (TShock.DB.Query("INSERT INTO TDWhitelist(name) VALUES (" + name + ")") != 0)
+            if (TShock.DB.Query("INSERT INTO TDWhitelist(name) VALUES ('" + name + "')") != 1)
                 TShock.Log.Error("SQL Error while inserting to TDWhitelist");
+            else
+                SQLTDW.Add(name);
         }
 
-        void RemoveFromDB(string name, string DB)
+        void RemoveFromDB(string name)
         {
-            if(TShock.DB.Query("DELETE FROM " + DB + "WHERE name='" + name + "'") != 0)
-                TShock.Log.Error("SQL Error while inserting to " + DB);
+            if(TShock.DB.Query("DELETE FROM TDWhitelist WHERE name='" + name + "'") != 1)
+                TShock.Log.Error("SQL Error while deleting to TDWhitelist");
+            else
+                    SQLTDW.Remove(name);
+        }
+
+        void RemoveFromDB(string name, string type)
+        {
+            if (TShock.DB.Query("DELETE FROM TDMuted WHERE name='" + name + "'") != 1)
+                TShock.Log.Error("SQL Error while deleting to TDMuted");
+            else
+            {
+                if (type == "discord")
+                    SQLTDMD.Remove(name);
+                else if (type == "terraria")
+                    SQLTDMT.Remove(name);
+            }
         }
     }
 }

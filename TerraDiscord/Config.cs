@@ -30,7 +30,7 @@ namespace TerraDiscord
                         Channel = "Here tooooo!!!~",
                         ARole = "TAdmin",
                         PMRole = "PermMute",
-                        isWhitelist = false,
+                        Whitelist = Whitelist.None,
                         ChatColor = Color.LawnGreen,
                         TCC = new TerrariaChatColor { A = Color.LawnGreen.A, R = Color.LawnGreen.R, G = Color.LawnGreen.G, B = Color.LawnGreen.B },
                         DFormat = "{nick}: {message}", //{nick} - Player username, {prefix} - Group prefix, {suffix} - Group suffix, {group} - Group name, {message} - Message
@@ -65,6 +65,11 @@ namespace TerraDiscord
                 if(current.PMRole == null || current.PMRole == string.Empty)
                 {
                     current.PMRole = "PermMute";
+                    isOverrided = true;
+                }
+                if(current.Whitelist == null)
+                {
+                    current.Whitelist = Whitelist.None;
                     isOverrided = true;
                 }
                 if (current.TCC == null)
@@ -107,7 +112,7 @@ namespace TerraDiscord
                     Channel = "Here tooooo!!!~",
                     ARole = "TAdmin",
                     PMRole = "PermMute",
-                    isWhitelist = false,
+                    Whitelist = Whitelist.None, // 0 - None, 1 - Discord, 2 - Terraria, 3 - Both
                     ChatColor = Color.LawnGreen,
                     TCC = new TerrariaChatColor { A = Color.LawnGreen.A, R = Color.LawnGreen.R, G = Color.LawnGreen.G, B = Color.LawnGreen.B },
                     DFormat = "{nick}: {message}", //{nick} - Player username, {prefix} - Group prefix, {suffix} - Group suffix, {group} - Group name, {message} - Message
@@ -135,7 +140,7 @@ namespace TerraDiscord
         [JsonProperty("White/BlacklistRole")]
         public string PMRole { get; set; }
         [JsonProperty("Whitelist")]
-        public bool isWhitelist { get; set; }
+        public Whitelist? Whitelist { get; set; }
         [JsonProperty("TerrariaChatColor")]
         public TerrariaChatColor TCC { get; set; }
         [JsonIgnore]
@@ -162,5 +167,13 @@ namespace TerraDiscord
         public byte G { get; set; }
         public byte B { get; set; }
         public byte A { get; set; }
+    }
+
+    public enum Whitelist
+    {
+        None = 0,
+        Discord = 1,
+        Terraria = 2,
+        Both = 3
     }
 }
