@@ -38,7 +38,8 @@ namespace TerraDiscord
                         TFormat = "[Discord]{nick}: {message}", //{nick} - Username, {role} - First role, {message} - Message
                         TCID = false,
                         TCIDFilter = true,
-                        TCIDBlackList = new List<string> { "user", "group", "stop", "restart" },
+                        TCIDFilterWB = false,
+                        TCIDList = new List<string> { "user", "group", "stop", "restart" },
                         TCIDRole = "TAdmin"
                     };
 
@@ -120,7 +121,8 @@ namespace TerraDiscord
                     TFormat = "[Discord]{nick}: {message}", //{nick} - Username, {role} - First role, {message} - Message
                     TCID = false,
                     TCIDFilter = true,
-                    TCIDBlackList = new List<string> { "user", "group", "stop", "restart" },
+                    TCIDFilterWB = false,
+                    TCIDList = new List<string> { "user", "group", "stop", "restart" },
                     TCIDRole = "TAdmin"
                 };
 
@@ -155,8 +157,10 @@ namespace TerraDiscord
         public bool TCID { get; set; }
         [JsonProperty("TCIDCommandFilter")]
         public bool TCIDFilter { get; set; }
-        [JsonProperty("TCIDCommandFilterBlackList")]
-        public List<string> TCIDBlackList { get; set; }
+        [JsonProperty("TCIDCommandFilterIsWhitelist")]
+        public bool TCIDFilterWB { get; set; }
+        [JsonProperty("TCIDCommandFilterList")]
+        public List<string> TCIDList { get; set; }
         [JsonProperty("TCIDRoleName")]
         public string TCIDRole { get; set; }
     }

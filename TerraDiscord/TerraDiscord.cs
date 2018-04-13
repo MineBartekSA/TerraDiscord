@@ -309,7 +309,7 @@ namespace TerraDiscord
             else if (args.Message.Content == Config.current.DCSpecifier + "mute")
             {
                 await DC.SendMessageAsync(args.Channel, "Usage: " + Config.current.DCSpecifier + "mute < terraria:discord> <username> [<username> ...]");
-                await DC.SendMessageAsync(args.Channel, "Don't use @username");
+                await DC.SendMessageAsync(args.Channel, "Don't use @username or nickname");
                 return;
             }
             else if(args.Message.Content == Config.current.DCSpecifier + "muted")
@@ -339,35 +339,50 @@ namespace TerraDiscord
                 #region Discord Terraria Commands In Discord Command
                 if (!CheckIfHasRole(args.Author, args.Guild, Config.current.TCIDRole))
                 {
-                    await DC.SendMessageAsync(args.Channel, args.Author + ", you don't seemes to have the right role to use this command");
+                    await DC.SendMessageAsync(args.Channel, args.Author.Username + ", you don't seemes to have the right role to use this command");
                     return;
                 }
 
                 if (Config.current.TCIDFilter)
                 {
-                    if (Config.current.TCIDBlackList.Contains(args.Message.Content.Replace(Config.current.DCSpecifier + "command ", "").Split(' ')[0]))
+                    if (!Config.current.TCIDFilterWB && Config.current.TCIDList.Contains(args.Message.Content.Replace(Config.current.DCSpecifier + "command ", "").Split(' ')[0]))
                     {
-                        await DC.SendMessageAsync(args.Channel, "Master " + args.Author.Username + ", you wanted to use a forbidden command! I'm sorry but, I can not allow this!!");
+                        await DC.SendMessageAsync(args.Channel, "Master " + ((DiscordMember)args.Author).Nickname == "" ? args.Author.Username : ((DiscordMember)args.Author).Nickname + ", you wanted to use a forbidden command! I'm sorry but, I can not allow this!!");
+                        return;
+                    }
+                    if(Config.current.TCIDFilterWB && !Config.current.TCIDList.Contains(args.Message.Content.Replace(Config.current.DCSpecifier + "command ", "").Split(' ')[0]))
+                    {
+                        await DC.SendMessageAsync(args.Channel, "Master " + ((DiscordMember)args.Author).Nickname == "" ? args.Author.Username : ((DiscordMember)args.Author).Nickname + ", you wanted to use a forbidden command! I'm sorry but, I can not allow this!!");
                         return;
                     }
                 }
-                else if (Config.current.TCIDBlackList.Contains(args.Message.Content.Replace(Config.current.DCSpecifier + "command ", "").Split(' ')[0]))
+                else if (!Config.current.TCIDFilterWB && Config.current.TCIDList.Contains(args.Message.Content.Replace(Config.current.DCSpecifier + "command ", "").Split(' ')[0]))
                 {
                     await Task.Delay(0);
                     string forbiddenCommand = args.Message.Content.Replace(Config.current.DCSpecifier + "command ", "");
                     if (Commands.HandleCommand(TSPlayer.Server, TShock.Config.CommandSpecifier + forbiddenCommand))
-                        await DC.SendMessageAsync(args.Channel, "Master " + args.Author.Username + ", you've used one of forbidden command, and it has succesfully executed. I think you know you are doing...");
+                        await DC.SendMessageAsync(args.Channel, "Master " + ((DiscordMember)args.Author).Nickname == "" ? args.Author.Username : ((DiscordMember)args.Author).Nickname + ", you've used one of forbidden command, and it has succesfully executed. I think you know you are doing...");
                     else
-                        await DC.SendMessageAsync(args.Channel, "Master " + args.Author.Username + ", the forbidden command has failed to execute!! Please check if server is ok!");
+                        await DC.SendMessageAsync(args.Channel, "Master " + ((DiscordMember)args.Author).Nickname == "" ? args.Author.Username : ((DiscordMember)args.Author).Nickname + ", the forbidden command has failed to execute!! Please check if server is ok!");
+                    return;
+                }
+                else if(Config.current.TCIDFilterWB && !Config.current.TCIDList.Contains(args.Message.Content.Replace(Config.current.DCSpecifier + "command ", "").Split(' ')[0]))
+                {
+                    await Task.Delay(0);
+                    string forbiddenCommand = args.Message.Content.Replace(Config.current.DCSpecifier + "command ", "");
+                    if (Commands.HandleCommand(TSPlayer.Server, TShock.Config.CommandSpecifier + forbiddenCommand))
+                        await DC.SendMessageAsync(args.Channel, "Master " + ((DiscordMember)args.Author).Nickname == "" ? args.Author.Username : ((DiscordMember)args.Author).Nickname + ", you've used one of forbidden command, and it has succesfully executed. I think you know you are doing...");
+                    else
+                        await DC.SendMessageAsync(args.Channel, "Master " + ((DiscordMember)args.Author).Nickname == "" ? args.Author.Username : ((DiscordMember)args.Author).Nickname + ", the forbidden command has failed to execute!! Please check if server is ok!");
                     return;
                 }
 
                 await Task.Delay(0);
                 string command = args.Message.Content.Replace(Config.current.DCSpecifier + "command ", "");
                 if (Commands.HandleCommand(TSPlayer.Server, TShock.Config.CommandSpecifier + command))
-                    await DC.SendMessageAsync(args.Channel, "Master " + args.Author.Username + ", the command was succesfully executed!");
+                    await DC.SendMessageAsync(args.Channel, "Master " + ((DiscordMember)args.Author).Nickname == "" ? args.Author.Username : ((DiscordMember)args.Author).Nickname + ", the command was succesfully executed!");
                 else
-                    await DC.SendMessageAsync(args.Channel, "Master " + args.Author.Username + ", I'm very sorry to say this but your command failed to execute!");
+                    await DC.SendMessageAsync(args.Channel, "Master " + ((DiscordMember)args.Author).Nickname == "" ? args.Author.Username : ((DiscordMember)args.Author).Nickname + ", I'm very sorry to say this but your command failed to execute!");
                 #endregion
             }
             else if (args.Message.Content == Config.current.DCSpecifier + "command")
