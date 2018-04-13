@@ -478,6 +478,7 @@ namespace TerraDiscord
                 args.Player.SendSuccessMessage("TerraDiscord v" + Version.ToString());
                 args.Player.SendInfoMessage("Commands:");
                 args.Player.SendInfoMessage("- td realod - To reload the plugin");
+                args.Player.SendInfoMessage("- td whitelist - To add/remove players form Whitelist");
                 args.Player.SendInfoMessage("- td mute - To mute/unmute plyers form discord chat");
                 args.Player.SendInfoMessage("- td muted - Shows muted player and discord user list");
             }
