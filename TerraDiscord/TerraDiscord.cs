@@ -410,18 +410,45 @@ namespace TerraDiscord
 
         async void OnChat(ServerChatEventArgs args)
         {
-            if (args.Text.StartsWith(TShock.Config.CommandSpecifier))
-                return;
-            if ((Config.current.Whitelist == Whitelist.Terraria || Config.current.Whitelist == Whitelist.Both) && !SQLTDW.Contains(TShock.Players[args.Who].User.Name))
-                return;
-            if (TShock.Players[args.Who].HasPermission("terradiscord.permmute") && !TShock.Players[args.Who].HasPermission("*"))
-                return;
-            if (TMute.Contains(TShock.Players[args.Who]))
-                return;
-            if (SQLTDMT.Contains(TShock.Players[args.Who].User.Name))
-                return;
-            TShock.Log.Info("Trying to send message");
-            await FormatAndSend(chan, args.Text, TShock.Players[args.Who]);
+            try
+            {
+                if (args.Text.StartsWith(TShock.Config.CommandSpecifier) || args.Text.StartsWith(TShock.Config.CommandSilentSpecifier))
+                    return;
+            }
+            catch (Exception exe) { TShock.Log.Error("An unexpected error has occured! Command Specifiers\nError: " + exe.ToString()); }
+            try
+            {
+                if ((Config.current.Whitelist == Whitelist.Terraria || Config.current.Whitelist == Whitelist.Both) && !SQLTDW.Contains(TShock.Players[args.Who].User.Name))
+                    return;
+            }
+            catch (Exception exe) { TShock.Log.Error("An unexpected error has occured! Whitelist\nError: " + exe.ToString()); }
+            try
+            {
+                if (TShock.Players[args.Who].HasPermission("terradiscord.permmute") && !TShock.Players[args.Who].HasPermission("*"))
+                    return;
+            }
+            catch (Exception exe) { TShock.Log.Error("An unexpected error has occured! Permissions!\nError: " + exe.ToString()); }
+            try
+            {
+                if (TMute.Contains(TShock.Players[args.Who]))
+                    return;
+            }
+            catch (Exception exe) { TShock.Log.Error("An unexpected error has occured! TMute\nError: " + exe.ToString()); }
+            try
+            {
+                if (SQLTDMT.Contains(TShock.Players[args.Who].User.Name))
+                    return;
+            }
+            catch (Exception exe) { TShock.Log.Error("An unexpected error has occured! SQLTDMT\nError: " + exe.ToString()); }
+            try
+            {
+                TShock.Log.Info("Trying to send message");
+                await FormatAndSend(chan, args.Text, TShock.Players[args.Who]);
+            }
+            catch (Exception exe)
+            {
+                TShock.Log.Error("An unexpected error has occured while OnChat!\nError: " + exe.ToString() + "\nArgs.Who: " + args.Who);
+            }
         }
 
         async Task<DiscordMessage> FormatAndSend(DiscordChannel chan, string message, TSPlayer who)
